@@ -54,7 +54,9 @@ class NeuroClientEEG(NeuroClient):
                     raise NeuroError("Packet size not consistent.")
             else:
                 self.samples = packet[1]
-            self.send(("! {} {}"+ " {}"*(self.samples)).format(*packet))
+            # FIXME: bastl:
+            s = "".join([ " {"+str(i+2)+"}" for i in range(self.samples) ])
+            self.send(("! {0} {1}"+ s).format(*packet))
             msg = self.recv()
             self.checkResponse(msg)
     
@@ -100,8 +102,8 @@ class NeuroSocketProducer(Thread):
             if self.lastSeq is not None:
                 if seq != self.lastSeq + 1:
                     self.lastSeq = seq
-                    #raise NeuroError("Packet sequence error (seq = {}).".format(seq))
-                    print "Oops! Packet sequence error (seq = {}).".format(seq)
+                    #raise NeuroError("Packet sequence error (seq = {0}).".format(seq))
+                    print "Oops! Packet sequence error (seq = {0}).".format(seq)
                 else:
                     self.lastSeq = self.lastSeq + 1
             else:
@@ -141,7 +143,7 @@ class NeuroSocketProducer(Thread):
             try:
                 lines = self.recvLines()
             except NeuroError as e:
-                print "Oops!! {} got: {}".format(threading.currentThread().name, e)
+                print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
                 break
             self.parseSamples(lines)
             self.enqueueSamples()
@@ -265,10 +267,10 @@ class NeuroClientDisp(NeuroClient):
         if client not in self.clients:
             self.recvStatus()
             if client not in self.clients:
-                raise NeuroError("Client #{} not present.".format(client))
+                raise NeuroError("Client #{0} not present.".format(client))
         if self.getRole(client) != 'EEG':
-            raise NeuroError("Client #{} is not EEG device.".format(client))
-        self.send('getheader {}'.format(client))
+            raise NeuroError("Client #{0} is not EEG device.".format(client))
+        self.send('getheader {0}'.format(client))
         lines = self.recv().splitlines()
         while len(lines) < 2:
             sleep(.1)
@@ -279,12 +281,12 @@ class NeuroClientDisp(NeuroClient):
     def unwatch(self, client):
         self.checkProvider()
         if client not in self.clients:
-            raise NeuroError("Client #{} not present.".format(client))
+            raise NeuroError("Client #{0} not present.".format(client))
         if self.getRole(client) != 'EEG':
-            raise NeuroError("Client #{} is not EEG device.".format(client))
+            raise NeuroError("Client #{0} is not EEG device.".format(client))
         if not self.isWatching(client):
             return
-        self.send('unwatch {}'.format(client))
+        self.send('unwatch {0}'.format(client))
         self.setWatching(client, False)
         if not self.isWatchingAny():
             self.watching.clear()
@@ -292,12 +294,12 @@ class NeuroClientDisp(NeuroClient):
     def watch(self, client):
         self.checkProvider()
         if client not in self.clients:
-            raise NeuroError("Client #{} not present.".format(client))
+            raise NeuroError("Client #{0} not present.".format(client))
         if self.getRole(client) != 'EEG':
-            raise NeuroError("Client #{} is not EEG device.".format(client))
+            raise NeuroError("Client #{0} is not EEG device.".format(client))
         if self.isWatching(client):
             return
-        self.send('watch {}'.format(client))
+        self.send('watch {0}'.format(client))
         self.setWatching(client, True)
         self.watching.set()
 

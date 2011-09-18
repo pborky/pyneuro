@@ -23,7 +23,7 @@ class NIA_Interface():
         """ Attache NeuroClient
         """
         try:
-            print "Openning connection to neuroserver instance at {}:{}.".format(*self.address)
+            print "Openning connection to neuroserver instance at {0}:{1}.".format(*self.address)
             self.client = NeuroClientDisp(self.address, self.QUEUE_SIZE)
             self.client.run()
             self.client.watch(0)
@@ -191,7 +191,7 @@ class Collector(Thread):
             try:
                 self.data.record()
             except Exception as e:
-                print "Oops!! {} got: {}".format(threading.currentThread().name, e)
+                print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
                 break
 
 if __name__ == "__main__":
@@ -371,5 +371,5 @@ if __name__ == "__main__":
     try:
         pyglet.app.run()
     except Exception as e:
-        print "Oops!! {} got: {}".format(threading.currentThread().name, e)
+        print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
 

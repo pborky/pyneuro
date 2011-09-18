@@ -22,7 +22,7 @@ class NIA_Interface():
         """ Attach NeuroClient 
         """
         try:
-            print "Openning connection to neuroserver instance at {}:{}.".format(*self.address)
+            print "Openning connection to neuroserver instance at {0}:{1}.".format(*self.address)
             self.client = NeuroClientDisp(self.address, self.QUEUE_SIZE)
             self.client.run()
             self.client.watch(0)
@@ -42,7 +42,7 @@ class NIA_Interface():
         """
         data = self.client.getData(0, 10*points)
         if len(data) > 0:
-            data = data[0]
+            data =  [ (i + 32768) * 256 for i in  data[0] ]
         else:
             data = []
         return data
@@ -155,7 +155,7 @@ class Collector(Thread):
             try:
                 self.data.record()
             except Exception as e:
-                print "Oops!! {} got: {}".format(threading.currentThread().name, e)
+                print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
                 break
 
 def parseArgs(argv, defaultAddress = None):
@@ -177,8 +177,8 @@ if __name__ == "__main__":
 
 pynia.py [[<options>] <host> <port>]
 where: 
-    <host> is address of neuroserver`s host (defaults to {})
-    <port> is port on which neuroserver is listenning (defaults to {})
+    <host> is address of neuroserver`s host (defaults to {0})
+    <port> is port on which neuroserver is listenning (defaults to {1})
     <options> are:
         -l start lightweight NeuroServer and listen (default)
         -c connect to another NeuroServer
@@ -228,6 +228,6 @@ where:
     try:
         pyglet.app.run()
     except Exception as e:
-        print "Oops!! {} got: {}".format(threading.currentThread().name, e)
+        print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
  
             
