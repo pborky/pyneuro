@@ -291,8 +291,8 @@ class NeuroServer(Neuro):
                 self.send("200 OK", sock)
             elif msg.strip() == 'status':
                 print "Client #{} issued 'status' command.".format(clId)
-                self.send("200 OK", sock)
-                self.send(self.getStatus(), sock)
+                #self.send("200 OK", sock)
+                self.send("200 OK\r\n"+self.getStatus(), sock) # brainbay cannot recognize if it is separated
             elif msg.strip() == 'role':
                 print "Client #{} issued 'role' command.".format(clId)
                 self.send(self.getRole(clId), sock)
@@ -319,10 +319,10 @@ class NeuroServer(Neuro):
                     self.send('400 BAD REQUEST', sock)
                 else:
                     print "Client #{} issued 'getheader' command.".format(clId)
-                    self.send("200 OK", sock)
-                    self.send(self.getHeader(target), sock)
+                    #self.send("200 OK", sock)
+                    self.send("200 OK\r\n"+self.getHeader(target), sock)
             else:
-                print "Client #{} issued unrecognized command.".format(clId)
+                print "Client #{} issued unrecognized command.\n{}".format(clId,msg)
                 self.send('400 BAD REQUEST', sock)
 
     def recvData(self, clId):

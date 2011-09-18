@@ -29,7 +29,7 @@ class NIADevice(NeuroDeviceUSB):
             raise NIAError("Received data is inconsistent. Unexpected number of samples: {0}".format(nsamp))
         for i in range(0,nsamp):
             b = arr[i*3 + 2]<<16 | arr[i*3 + 1]<<8 | arr[i*3]
-            retArray.append((self.sequence, 1, float(b)))
+            retArray.append((self.sequence, 1, (float(b)/256.0) - 32768))
             self.sequence = self.sequence + 1
         return retArray
 
