@@ -101,7 +101,7 @@ class Neuro:
         except socket.timeout:
             raise NeuroTimeout("Timeout writting to socket.")
         except socket.error as e:
-            raise NeuroError("Error writting to socket: {}".format(e))
+            raise NeuroError("Error writting to socket: {0}".format(e))
     
     def recv(self, sock = None):
         if sock is None:
@@ -113,7 +113,7 @@ class Neuro:
         except socket.timeout:
             raise NeuroTimeout("Timeout reading socket.")
         except socket.error as e:
-            raise NeuroError("Error reading socket: {}".format(e))
+            raise NeuroError("Error reading socket: {0}".format(e))
     
     def run(self):
         self.open()

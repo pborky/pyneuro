@@ -18,7 +18,7 @@ class NeuroDeviceProducer(Thread):
         self.caller = caller
         self.queue = caller.getQueues(clId)
         self.lastSeq = None
-        self.name = "DeviceThread-{}".format(clId)
+        self.name = "DeviceThread-{0}".format(clId)
         self.daemon = True
     
     def run(self):
@@ -36,7 +36,7 @@ class NeuroSocketCommander(Thread):
         threading.Thread.__init__(self)
         self.clId = clId
         self.caller = caller
-        self.name = "CommanderThread-{}".format(clId)
+        self.name = "CommanderThread-{0}".format(clId)
         self.daemon = True
     
     def run(self):
@@ -44,10 +44,10 @@ class NeuroSocketCommander(Thread):
             try:
                 self.caller.recvCommands(self.clId)
             except NeuroTimeout as e:
-                #print "*** Oops! Got: {}".format(e)
+                #print "*** Oops! Got: {0}".format(e)
                 pass
             except NeuroError as e:
-                print "*** Oops! {} got: {}".format(threading.currentThread().name, e)
+                print "*** Oops! {0} got: {1}".format(threading.currentThread().name, e)
                 break
             self.caller.getClientsForRole('Display')
             if self.caller.isWatchingAny():
@@ -61,7 +61,7 @@ class NeuroSocketConsumer(Thread):
         self.clId = clId
         self.caller = caller
         self.queue = caller.getQueues(clId)
-        self.name = "SenderThread-{}".format(clId)
+        self.name = "SenderThread-{0}".format(clId)
         self.daemon = True
     
     def run(self):
@@ -84,7 +84,7 @@ class NeuroSocketConsumer(Thread):
                 try:
                     self.caller.send(packet, sock)
                 except NeuroError as e:
-                    print "*** Oops! {} got: {}".format(threading.currentThread().name, e)
+                    print "*** Oops! {0} got: {1}".format(threading.currentThread().name, e)
 
 class NeuroServer(Neuro):
     def __init__(self, address, device, queueSize = 0):
@@ -235,7 +235,7 @@ class NeuroServer(Neuro):
                 thread = self.getThread(id)
                 if thread is None or not thread.isAlive():
                     if thread is not None:
-                        print "Client #{} found dead. Cleaning up..".format(id)
+                        print "Client #{0} found dead. Cleaning up..".format(id)
                     dead.append(id)
             retArr = []
             for id,val in self.clients.items():
@@ -258,7 +258,7 @@ class NeuroServer(Neuro):
                 thread = self.getThread(id)
                 if thread is None or not thread.isAlive():
                     if thread is not None:
-                        print "Client #{} found dead. Cleaning up.".format(id)
+                        print "Client #{0} found dead. Cleaning up.".format(id)
                     dead.append(id)
             nClients = 0
             clientList = []            
@@ -269,8 +269,8 @@ class NeuroServer(Neuro):
                         self.getWatching(cl).remove(id)
                 else:
                     nClients += 1
-                    clientList.append('{}:{}'.format(id, self.getRole(id) ))
-            clientList.insert(0, '{} clients connected'.format(nClients))
+                    clientList.append('{0}:{1}'.format(id, self.getRole(id) ))
+            clientList.insert(0, '{0} clients connected'.format(nClients))
             return '\r\n'.join(clientList)
         finally:
             self.clientsLock.release()
@@ -286,43 +286,43 @@ class NeuroServer(Neuro):
             mW = reW.match(msg)
             mH = reH.match(msg)
             if msg.strip() == 'display':
-                print "Client #{} issued 'display' command.".format(clId)
+                print "Client #{0} issued 'display' command.".format(clId)
                 self.setRole(clId, "Display")
                 self.send("200 OK", sock)
             elif msg.strip() == 'status':
-                print "Client #{} issued 'status' command.".format(clId)
+                print "Client #{0} issued 'status' command.".format(clId)
                 #self.send("200 OK", sock)
                 self.send("200 OK\r\n"+self.getStatus(), sock) # brainbay cannot recognize if it is separated
             elif msg.strip() == 'role':
-                print "Client #{} issued 'role' command.".format(clId)
+                print "Client #{0} issued 'role' command.".format(clId)
                 self.send(self.getRole(clId), sock)
             elif mW is not None:
                 target = int(mW.group(2))
                 if self.getRole(clId) != "Display" or  self.getRole(target) != 'EEG':
                     if mW.group(1) == 'un':
-                        print "Client #{} issued 'unwatch' command but not in display role or target is not EEG.".format(clId)
+                        print "Client #{0} issued 'unwatch' command but not in display role or target is not EEG.".format(clId)
                     else:
-                        print "Client #{} issued 'watch' command but not in display role or target is not EEG.".format(clId)
+                        print "Client #{0} issued 'watch' command but not in display role or target is not EEG.".format(clId)
                     self.send('400 BAD REQUEST', sock)
                 else:
                     self.send("200 OK", sock)
                     if mW.group(1) == 'un':
-                        print "Client #{} issued 'unwatch' command.".format(clId)
+                        print "Client #{0} issued 'unwatch' command.".format(clId)
                         self.getWatching(clId).remove(target)
                     else:
-                        print "Client #{} issued 'watch' command.".format(clId)
+                        print "Client #{0} issued 'watch' command.".format(clId)
                         self.getWatching(clId).append(target)
             elif mH is not None:
                 target = int(mH.group(1))
                 if self.getRole(clId) != "Display" or  self.getRole(target) != 'EEG':
-                    print "Client #{} issued 'getheader' command but not in display role or target is not EEG.".format(clId)
+                    print "Client #{0} issued 'getheader' command but not in display role or target is not EEG.".format(clId)
                     self.send('400 BAD REQUEST', sock)
                 else:
-                    print "Client #{} issued 'getheader' command.".format(clId)
+                    print "Client #{0} issued 'getheader' command.".format(clId)
                     #self.send("200 OK", sock)
                     self.send("200 OK\r\n"+self.getHeader(target), sock)
             else:
-                print "Client #{} issued unrecognized command.\n{}".format(clId,msg)
+                print "Client #{0} issued unrecognized command.\n{1}".format(clId,msg)
                 self.send('400 BAD REQUEST', sock)
 
     def recvData(self, clId):
@@ -334,7 +334,8 @@ class NeuroServer(Neuro):
             self.lastSeq = packet[0]
             if packet[1] + 2 != len(packet):
                 raise NeuroError("Packet size not consistent.")
-            data.append(("! {} {} {}" + " {}"*(packet[1])).format(clId, *packet))
+            s = "".join([ " {"+str(i+3)+"}" for i in range(packet[1]) ])
+            data.append(("! {0} {1} {2}" + s).format(clId, *packet))
         return "\r\n".join(data)
     
     def cleanup(self):
@@ -361,13 +362,13 @@ class NeuroServer(Neuro):
         clId = self.registerClient('EEG', self.device.getHeader(), [], NeuroDeviceProducer, self.device)
         self.consumer = NeuroSocketConsumer(clId, self)
         self.consumer.start()
-        print "Server is going to accept connections on address {}:{}.".format(*self.address)
+        print "Server is going to accept connections on address {0}:{1}.".format(*self.address)
         while True:
             try:
                 sock, addr =  self.listener.accept()
                 sock.settimeout(10)
                 clId = self.registerClient('Unknown', None, [], NeuroSocketCommander, sock)
-                print "Connected client #{} from {}:{}.".format(clId, *addr)
+                print "Connected client #{0} from {1}:{2}.".format(clId, *addr)
             except KeyboardInterrupt:
                 print "Received interupt signal."
                 self.cleanup()
