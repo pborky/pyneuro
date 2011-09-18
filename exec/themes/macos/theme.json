@@ -1,0 +1,28 @@
+{
+		"font": "Lucida Grande",
+		"font_size": 9, "font_size_small": 8,
+		"font_color": [0, 0, 0, 255],
+		
+		"dialogue": {
+			"image": "themes/macos/dialogue.png"
+		},
+		"folding_box": {
+			"image": "themes/macos/folding_box.png",
+			"image_closed": "themes/macos/folding_box_closed.png"
+		},
+		"text_input": {
+			"image": "themes/macos/text_input.png"
+		},
+		"button": {
+			"image_up": "themes/macos/button.png",
+			"image_down": "themes/macos/button_down.png"
+		},
+		"checkbox": {
+			"image_checked": "themes/macos/checkbox_checked.png",
+			"image_unchecked": "themes/macos/checkbox_unchecked.png"
+		},
+		"slider": {
+			"image_slider": "themes/macos/slider.png",
+			"image_knob": "themes/macos/slider_knob.png"
+		}
+}

@@ -1,0 +1,28 @@
+{
+		"font": "Lucida Grande",
+		"font_size": 9, "font_size_small": 8,
+		"font_color": [255, 255, 255, 255],
+		
+		"dialogue": {
+			"image": "themes/pywidget/dialogue.png"
+		},
+		"folding_box": {
+			"image": "themes/pywidget/folding_box.png",
+			"image_closed": "themes/pywidget/folding_box_closed.png"
+		},
+		"text_input": {
+			"image": "themes/pywidget/text_input.png"
+		},
+		"button": {
+			"image_up": "themes/pywidget/button.png",
+			"image_down": "themes/pywidget/button_down.png"
+		},
+		"checkbox": {
+			"image_checked": "themes/pywidget/checkbox_checked.png",
+			"image_unchecked": "themes/pywidget/checkbox_unchecked.png"
+		},
+		"slider": {
+			"image_slider": "themes/pywidget/slider.png",
+			"image_knob": "themes/pywidget/slider_knob.png"
+		}
+}
