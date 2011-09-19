@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/python
 
 def parseArgs(argv, defaultAddress = None):
     try:

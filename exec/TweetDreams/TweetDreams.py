@@ -1,4 +1,5 @@
-#!/bin/env python
+#!/usr/bin/python
+# Based on http://code.google.com/p/pynia/
 
 import sys
 import usb

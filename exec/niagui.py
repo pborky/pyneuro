@@ -1,4 +1,5 @@
-#!/bin/env python
+#!/usr/bin/python
+
 ''' Based on pyNIA http://code.google.com/p/pynia/
 '''
 import sys
