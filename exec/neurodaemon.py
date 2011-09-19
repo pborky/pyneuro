@@ -41,7 +41,7 @@ if __name__ == "__main__":
 pynia.py [[<options>] <host> <port>]
 where: 
     <host> is address of neuroserver`s host (defaults to {0})
-    <port> is port on which neuroserver is listenning (defaults to {0})
+    <port> is port on which neuroserver is listenning (defaults to {1})
     <options> are:
         -l start lightweight NeuroServer and listen (default)
         -c connect to another NeuroServer
