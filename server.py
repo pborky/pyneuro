@@ -23,13 +23,11 @@ class NeuroDeviceProducer(Thread):
     
     def run(self):
         while not self.caller.terminate.isSet():
-            self.caller.watching.wait(1.0)
-            if not self.caller.watching.isSet():
-                continue
-            try:
-                self.queue.put(self.caller.recvData(self.clId),1.0)
-            except Full:
-                raise NeuroError("Queue busy. Dropping packet(s).")
+            if len(self.caller.getWatchers(self.clId)) > 0:
+                try:
+                    self.queue.put(self.caller.recvData(self.clId),1.0)
+                except Full:
+                    raise NeuroError("Queue busy. Dropping packet(s).")
             
 class NeuroSocketCommander(Thread):
     def __init__(self, clId, caller):
@@ -58,33 +56,35 @@ class NeuroSocketCommander(Thread):
 class NeuroSocketConsumer(Thread):
     def __init__(self, clId, caller):
         threading.Thread.__init__(self)
-        self.clId = clId
+        #self.clId = clId
         self.caller = caller
-        self.queue = caller.getQueues(clId)
+        #self.queue = caller.getQueues(clId)
         self.name = "SenderThread-{0}".format(clId)
         self.daemon = True
     
     def run(self):
         while not self.caller.terminate.isSet():
-            if self.queue.empty():
-                continue
-            self.caller.getClientsForRole('EEG')
-            watchers = self.caller.getWatchers(self.clId)
-            try: 
-                packet = self.queue.get(1.0)
-            except Empty:
-                continue
-            if len(watchers) == 0:
-                continue
-            for watcher in watchers:
-                sock = self.caller.getSocket(watcher)
-                if sock is None:
-                    print "No socket"
+            eegs = self.caller.getClientsForRole('EEG')
+            for eeg in eegs:
+                watchers = self.caller.getWatchers(eeg)
+                queue = self.caller.getQueues(eeg)
+                if queue.empty():
                     continue
                 try:
-                    self.caller.send(packet, sock)
-                except NeuroError as e:
-                    print "*** Oops! {0} got: {1}".format(threading.currentThread().name, e)
+                    packet = queue.get(1.0)
+                except Empty:
+                    continue
+                if len(watchers) == 0:
+                    continue
+                for watcher in watchers:
+                    sock = self.caller.getSocket(watcher)
+                    if sock is None:
+                        print "No socket"
+                        continue
+                    try:
+                        self.caller.send(packet, sock)
+                    except NeuroError as e:
+                        print "*** Oops! {0} got: {1}".format(threading.currentThread().name, e)
 
 class NeuroServer(Neuro):
     def __init__(self, address, device, queueSize = 0):
@@ -113,13 +113,13 @@ class NeuroServer(Neuro):
         self.queuesLock.acquire()
         try:
             if client is None:
-                q = self.queues.copy()
+                return self.queues.copy()
             else:
-                q = self.queues[client]
+                return self.queues[client]
+                
         finally:
             self.queuesLock.release()
-        return q
-
+    
     def setQueues(self, client, queue):
         self.queuesLock.acquire()
         try:
@@ -200,6 +200,8 @@ class NeuroServer(Neuro):
         self.clientsLock.acquire()
         try:
             self.clients[clId][0] = value
+            if value == 'EEG':
+                self.setQueues(clId, Queue(self.queueSize))
         finally:
             self.clientsLock.release()
     
@@ -276,18 +278,28 @@ class NeuroServer(Neuro):
             self.clientsLock.release()
     
     def recvCommands(self, clId):
+        #Note: this is crap, it should be rewritten soon
         reW = re.compile(r"^(un)?watch\s+([0-9]+)")
         reH = re.compile(r"^getheader\s+([0-9]+)")
+        reD = re.compile(r"^!(\s+[0-9]+)+")
+        reS = re.compile(r"^setheader\s(.*)")
         sock = self.getSocket(clId)
         lines = self.recv(sock).splitlines()
         if len(lines) == 0:
             raise NeuroError("No commands received. Is socket opened?")
+        messages = []
         for msg in lines:
             mW = reW.match(msg)
             mH = reH.match(msg)
+            mD = reD.match(msg)
+            mS = reS.match(msg)
             if msg.strip() == 'display':
                 print "Client #{0} issued 'display' command.".format(clId)
                 self.setRole(clId, "Display")
+                self.send("200 OK", sock)
+            elif msg.strip() == 'eeg':
+                print "Client #{0} issued 'eeg' command.".format(clId)
+                self.setRole(clId, "EEG")
                 self.send("200 OK", sock)
             elif msg.strip() == 'status':
                 print "Client #{0} issued 'status' command.".format(clId)
@@ -307,10 +319,11 @@ class NeuroServer(Neuro):
                 else:
                     self.send("200 OK", sock)
                     if mW.group(1) == 'un':
-                        print "Client #{0} issued 'unwatch' command.".format(clId)
+                        print "Client #{0} issued 'unwatch {1}' command.".format(clId, target)
+                        #print "target={0} watching={1}".format(target, self.getWatching(clId))
                         self.getWatching(clId).remove(target)
                     else:
-                        print "Client #{0} issued 'watch' command.".format(clId)
+                        print "Client #{0} issued 'watch {1}' command.".format(clId, target)
                         self.getWatching(clId).append(target)
             elif mH is not None:
                 target = int(mH.group(1))
@@ -318,19 +331,32 @@ class NeuroServer(Neuro):
                     print "Client #{0} issued 'getheader' command but not in display role or target is not EEG.".format(clId)
                     self.send('400 BAD REQUEST', sock)
                 else:
-                    print "Client #{0} issued 'getheader' command.".format(clId)
+                    print "Client #{0} issued 'getheader {1}' command.".format(clId, target)
                     #self.send("200 OK", sock)
                     self.send("200 OK\r\n"+self.getHeader(target), sock)
+            elif mS is not None:
+                self.setHeader(clId, mS.group(1))
+                print "Client #{0} issued 'setheader' command. Header is now <{1}>.".format(clId, self.getHeader(clId))
+                self.send("200 OK", sock)
+            elif mD is not None:
+                if len(self.getWatchers(clId)) > 0:
+                    msg = msg.split()
+                    msg.insert(1, str(clId))
+                    messages.append(' '.join(msg))
+                self.send("200 OK", sock)
             else:
                 print "Client #{0} issued unrecognized command.\n{1}".format(clId,msg)
                 self.send('400 BAD REQUEST', sock)
+        if self.getRole(clId) == 'EEG':
+            self.getQueues(clId).put('\r\n'.join(messages))
 
     def recvData(self, clId):
         data = []
         sock = self.getSocket(clId)
         for packet in sock.getData():
             if self.lastSeq > -1 and self.lastSeq + 1 != packet[0]:
-                raise NeuroError("Sequence number not consistent.")
+                #raise NeuroError("Sequence number not consistent.")
+                print "Sequence number not consistent."
             self.lastSeq = packet[0]
             if packet[1] + 2 != len(packet):
                 raise NeuroError("Packet size not consistent.")
@@ -343,10 +369,12 @@ class NeuroServer(Neuro):
         self.watching.clear()
         self.terminate.set()
         
+        #print self.consumer.name
         self.consumer.join()
         for id in self.clients:
             thread = self.getThread(id)
             if thread is not None and thread.isAlive():
+                #print thread.name
                 thread.join()
         
         self.listener.shutdown(0)
@@ -367,7 +395,7 @@ class NeuroServer(Neuro):
             try:
                 sock, addr =  self.listener.accept()
                 sock.settimeout(10)
-                clId = self.registerClient('Unknown', None, [], NeuroSocketCommander, sock)
+                clId = self.registerClient('Unknown', '', [], NeuroSocketCommander, sock)
                 print "Connected client #{0} from {1}:{2}.".format(clId, *addr)
             except KeyboardInterrupt:
                 print "Received interupt signal."

@@ -30,6 +30,7 @@ if __name__ == "__main__":
     from pyneuro.server import NeuroServer
     from pyneuro.client import NeuroClientEEG
     from pyneuro.niadevice import NIADevice
+    from pyneuro.trigger import TriggerDevice
 
     NEURO = { 'listen': NeuroServer, 'connect': NeuroClientEEG }
 
@@ -53,8 +54,11 @@ where:
     
     try:
         # instantionate objects: nia device and socket
-        nia = NIADevice()
-        neuro = NeuroClass(address, nia)
+        try:
+            dev = NIADevice()
+        except NeuroDeviceError:
+            dev = TriggerDevice(4000)
+        neuro = NeuroClass(address, dev)
         if NeuroClass == NeuroServer:
             print "Starting NeuroServer."
         else:

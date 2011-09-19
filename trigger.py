@@ -20,6 +20,8 @@ class TriggerDeviceThread(Thread):
         while True:
             if self.caller.queue.full():
                 print "TriggerDevice: Queue busy."
+                while self.caller.queue.full():
+                    sleep(0.1)
             else:
                 val = self.caller.getValues()
                 self.caller.queue.put([ (self.seq+i, self.channels) + val for i in range(10) ])
@@ -33,7 +35,7 @@ class TriggerDevice(NeuroDevice):
         self.header = header
         self.values = [0,]*self.channels
         self.valLock = RLock()
-        self.queue = Queue(100000)
+        self.queue = Queue(100)
         self.thread = TriggerDeviceThread(self)
         self.thread.start()
     

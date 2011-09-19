@@ -38,7 +38,7 @@ class NeuroClientEEG(NeuroClient):
 
     def sendHeader(self):
         try:
-            self.send("setheader "+self.device.getHeader()+"\r\n")
+            self.send("setheader "+self.device.getHeader())
             msg = self.recv()
             self.checkResponse(msg)
         except socket.error:
@@ -47,7 +47,9 @@ class NeuroClientEEG(NeuroClient):
     def sendData(self):
         for packet in self.device.getData():
             if self.lastSeq > -1 and self.lastSeq + 1 != packet[0]:
-                raise NeuroError("Sequence number not consistent.")
+                #raise NeuroError("Sequence number not consistent.")
+                print "Sequence number not consistent."
+                self.lastSeq = packet[0]
             self.lastSeq = packet[0]
             if self.samples > 0:
                 if self.samples != packet[1] and self.samples + 2 != len(packet):
