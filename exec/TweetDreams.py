@@ -10,7 +10,8 @@ from threading import Semaphore,Thread
 
 import pyneuro
 from pyneuro import NeuroError
-from pyneuro.client import NeuroClientDisp
+from pyneuro.client import NeuroClientDisp,NeuroClientEEG
+from pyneuro.trigger import TriggerDevice
 
 class NIA_Interface():
     """ Attaches the NIA device, and provides low level data collection and information
@@ -194,10 +195,25 @@ class Collector(Thread):
                 print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
                 break
 
+class TriggerThread(Thread):
+    def __init__(self, trigger):
+        Thread.__init__(self)
+        self.triggerClient = trigger
+        self.name = "TriggerDeviceThread"
+        self.daemon = True
+
+    def run(self):
+        self.triggerClient.run()
+
 if __name__ == "__main__":
     
     address = parseArgs(sys.argv, (pyneuro.DEFAULT_HOST, pyneuro.DEFAULT_PORT))
 
+    trg = TriggerDevice(256)
+    cl = NeuroClientEEG(address, trg)
+    t = TriggerThread(cl)    
+    t.start()
+    
     import pyglet
     import simplui
     import urllib
@@ -215,7 +231,7 @@ if __name__ == "__main__":
     
     
     nia = NIA_Data(25, address)
-    
+   
     semaphore = Semaphore()
     collector = Collector(nia, semaphore)
     
@@ -351,6 +367,9 @@ if __name__ == "__main__":
             else:
                 element = frame.get_element_by_name('messages')
                 element.add( simplui.Label(20, 20, time.strftime("REM Detected at %H:%M:%S", time.gmtime())) )
+            trg.setValues((255,))
+        else:
+            trg.setValues((127,))
         data = nia.fourier_image()
         image = pyglet.image.ImageData(500,80,'I', data)
         image.blit(0,0)
