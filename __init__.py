@@ -84,8 +84,8 @@ class NeuroDeviceUSB(NeuroDevice):
 
 class Neuro:
     def __init__(self, address, device):
-        if device is not None and not isinstance(device, NeuroDevice):
-            raise NeuroError("Parameter 'device' must be instance of 'NeuroDevice'.")
+        #if device is not None and not isinstance(device, NeuroDevice):
+        #    raise NeuroError("Parameter 'device' must be instance of 'NeuroDevice'.")
         
         self.address = address
         self.device = device

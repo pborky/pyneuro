@@ -4,7 +4,7 @@ from Queue import Queue,Full,Empty
 from threading import Thread,Timer,RLock
 from time import sleep
 
-TRIGGER_HEADER = '''0       TRIGGERING USER                                                                 PBORKY                                                                          03.03.1017.51.36512     BIOSEMI                                     -1      1       1   PBORKY RAW      UNIVERSAL                                                                       mV           0    255        0    255   No prefiltering, raw data from NIA                                              4000                                    '''
+TRIGGER_HEADER = '''0       TRIGGERING USER                                                                 PBORKY                                                                          03.03.1017.51.36512     BIOSEMI                                     -1      1       1   PBORKY RAW      UNIVERSAL                                                                       mV           0    255        0    255   No prefiltering, raw data from NIA                                               256                                    '''
         
 class TriggerDeviceThread(Thread):
     def __init__(self, caller):
@@ -29,7 +29,7 @@ class TriggerDeviceThread(Thread):
             sleep(10.0/self.freq)
 
 class TriggerDevice(NeuroDevice):
-    def __init__(self, freq, header = TRIGGER_HEADER):
+    def __init__(self, freq = 256, header = TRIGGER_HEADER):
         self.freq = freq
         self.channels = 1
         self.header = header

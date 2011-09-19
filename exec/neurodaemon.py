@@ -56,8 +56,10 @@ where:
         # instantionate objects: nia device and socket
         try:
             dev = NIADevice()
+            print "NIA device has been found."
         except NeuroDeviceError:
-            dev = TriggerDevice(4000)
+            print "NIA device has not been found. Using dummy trigger device."
+            dev = TriggerDevice()
         neuro = NeuroClass(address, dev)
         if NeuroClass == NeuroServer:
             print "Starting NeuroServer."

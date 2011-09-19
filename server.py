@@ -17,7 +17,6 @@ class NeuroDeviceProducer(Thread):
         self.clId = clId
         self.caller = caller
         self.queue = caller.getQueues(clId)
-        self.lastSeq = None
         self.name = "DeviceThread-{0}".format(clId)
         self.daemon = True
     
@@ -54,12 +53,10 @@ class NeuroSocketCommander(Thread):
                 self.caller.watching.clear()
 
 class NeuroSocketConsumer(Thread):
-    def __init__(self, clId, caller):
+    def __init__(self, caller):
         threading.Thread.__init__(self)
-        #self.clId = clId
         self.caller = caller
-        #self.queue = caller.getQueues(clId)
-        self.name = "SenderThread-{0}".format(clId)
+        self.name = "SenderThread"
         self.daemon = True
     
     def run(self):
@@ -100,7 +97,7 @@ class NeuroServer(Neuro):
         self.terminate = Event()
         self.terminate.clear()
         self.watching.clear()
-        self.lastSeq = -1
+        self.lastSeq = {}
     
     def open(self):
         if self.listener is None:
@@ -139,6 +136,13 @@ class NeuroServer(Neuro):
             thread = ThreadClass(clId, self)
             self.clients[clId] = [role, header, watching, thread, sock]
             thread.start()
+            if isinstance(sock,socket.socket):
+                s = "Registered {0} client #{1} from {2}:{3}.".format(role.lower(), clId, *sock.getpeername())
+            else:
+                s = "Registered {0} client #{1}.".format(role.lower(), clId)
+            if header != '':
+                s += " Header is <{0}>.".format(header)
+            print s
             return clId
         finally:
             self.clientsLock.release()
@@ -354,10 +358,11 @@ class NeuroServer(Neuro):
         data = []
         sock = self.getSocket(clId)
         for packet in sock.getData():
-            if self.lastSeq > -1 and self.lastSeq + 1 != packet[0]:
-                #raise NeuroError("Sequence number not consistent.")
-                print "Sequence number not consistent."
-            self.lastSeq = packet[0]
+            if clId in self.lastSeq:
+                if self.lastSeq[clId] + 1 != packet[0]:
+                    #raise NeuroError("Sequence number not consistent.")
+                    print "Sequence number not consistent."
+            self.lastSeq[clId] = packet[0]
             if packet[1] + 2 != len(packet):
                 raise NeuroError("Packet size not consistent.")
             s = "".join([ " {"+str(i+3)+"}" for i in range(packet[1]) ])
@@ -387,16 +392,22 @@ class NeuroServer(Neuro):
     
     def run(self):
         Neuro.run(self)
-        clId = self.registerClient('EEG', self.device.getHeader(), [], NeuroDeviceProducer, self.device)
-        self.consumer = NeuroSocketConsumer(clId, self)
+        if isinstance(self.device,NeuroDevice):
+            self.registerClient('EEG', self.device.getHeader(), [], NeuroDeviceProducer, self.device)
+        else:
+            for device in self.device:
+                if not isinstance(device,NeuroDevice):
+                        raise NeuroError("Device must be instance of 'NeuroDevice'.")
+                self.registerClient('EEG', device.getHeader(), [], NeuroDeviceProducer, device)
+        self.consumer = NeuroSocketConsumer(self)
         self.consumer.start()
         print "Server is going to accept connections on address {0}:{1}.".format(*self.address)
         while True:
             try:
                 sock, addr =  self.listener.accept()
                 sock.settimeout(10)
+                print "Connected client from {0}:{1}.".format(*addr)
                 clId = self.registerClient('Unknown', '', [], NeuroSocketCommander, sock)
-                print "Connected client #{0} from {1}:{2}.".format(clId, *addr)
             except KeyboardInterrupt:
                 print "Received interupt signal."
                 self.cleanup()
