@@ -1,2 +1,12 @@
 NeuroServer implementation in python.
 
+dependecies:
+
+python-2.7
+python-setuptools
+libusb
+
+pyglet (easy_install)
+numpy (easy_install)
+pyusb (easy_install)
+
