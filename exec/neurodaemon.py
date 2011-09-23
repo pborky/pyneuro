@@ -59,7 +59,7 @@ where:
             print "NIA device has been found."
         except NeuroDeviceError:
             print "NIA device has not been found. Using dummy trigger device."
-            dev = TriggerDevice()
+            dev = TriggerDevice(4000)
         neuro = NeuroClass(address, dev)
         if NeuroClass == NeuroServer:
             print "Starting NeuroServer."

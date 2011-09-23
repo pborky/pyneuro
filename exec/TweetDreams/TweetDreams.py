@@ -204,7 +204,11 @@ class TriggerThread(Thread):
         self.daemon = True
 
     def run(self):
-        self.triggerClient.run()
+        try:
+            self.triggerClient.run()
+        except Exception as e:
+            print "Oops!! {0} got: {1}".format(threading.currentThread().name, e)
+
 
 if __name__ == "__main__":
     
