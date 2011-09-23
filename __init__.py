@@ -1,9 +1,7 @@
 
 import socket
 
-from usbhelpers import findUSBEndpoints
-from usb.core import Endpoint,Interface
-from usb.util import endpoint_direction,ENDPOINT_IN,ENDPOINT_OUT
+import usbhelpers
 
 from header import Header
 
@@ -36,7 +34,7 @@ class NeuroDeviceUSB(NeuroDevice):
     def __init__(self, idVendor, idProduct, header):
         NeuroDevice.__init__(self, header=header)
         # find USB device and input endpoint
-        self.endpoint = findUSBEndpoints(idVendor, idProduct, ENDPOINT_IN)
+        self.endpoint = usbhelpers.findUSBEndpoints(idVendor, idProduct, usbhelpers.ENDPOINT_IN)
         if self.endpoint is None:
             raise NeuroDeviceError("No USB devices or endpoints has been found.")
 
