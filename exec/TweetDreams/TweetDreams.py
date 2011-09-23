@@ -210,7 +210,7 @@ if __name__ == "__main__":
     
     address = parseArgs(sys.argv, (pyneuro.DEFAULT_HOST, pyneuro.DEFAULT_PORT))
 
-    trg = TriggerDevice(64)
+    trg = TriggerDevice(32)
     cl = NeuroClientEEG(address, trg)
     t = TriggerThread(cl)    
     t.start()

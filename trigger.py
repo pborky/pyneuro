@@ -1,10 +1,10 @@
 
-from pyneuro import NeuroDevice
+from pyneuro import NeuroDevice,Header
 from Queue import Queue,Full,Empty
 from threading import Thread,Timer,RLock
 from time import sleep
 
-TRIGGER_HEADER = '''0       TRIGGERING USER                                                                 PBORKY                                                                          03.03.1017.51.36512     BIOSEMI                                     -1      1       1   PBORKY RAW      UNIVERSAL                                                                       mV           0    255        0    255   No prefiltering, raw data from NIA                                             {0}                                    '''
+TRIGGER_HEADER = '''0       TRIGGERING USER                                                                 PBORKY                                                                          03.03.1017.51.36512     BIOSEMI                                     -1      1       1   PBORKY RAW      UNIVERSAL                                                                       mV           0    255        0    255   No prefiltering, raw data from NIA                                              256                                     '''
         
 class TriggerDeviceThread(Thread):
     def __init__(self, caller):
@@ -31,10 +31,14 @@ class TriggerDeviceThread(Thread):
             sleep(float(self.freq/15)/self.freq)
 
 class TriggerDevice(NeuroDevice):
-    def __init__(self, freq = 256):
+    def __init__(self, freq = 256, channels = 1):
         self.freq = freq
-        self.channels = 1
-        self.header = TRIGGER_HEADER.format(str(freq).rjust(5, ' '))
+        self.channels = channels
+        self.header = Header(TRIGGER_HEADER)
+        self.header.channelCount = channels
+        for i in range(channels):
+            self.header.channels[i].samplingFrequency = freq
+            self.header.channels[i].label = 'TRIGGER%d' % i
         self.values = [0,]*self.channels
         self.valLock = RLock()
         self.queue = Queue(15)
@@ -56,7 +60,7 @@ class TriggerDevice(NeuroDevice):
             self.valLock.release()
 
     def getHeader(self):
-        return self.header
+        return self.header.text()
     
     def getData(self):
         return self.queue.get(10.0)
