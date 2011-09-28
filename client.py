@@ -9,7 +9,7 @@ from Queue import Queue,Full,Empty
 
 from time import sleep
 
-from pyneuro import NeuroError,NeuroTimeout,Neuro
+from pyneuro import NeuroError,NeuroTimeout,Neuro,Header
 
 class NeuroClient(Neuro):
     def __init__(self, address, device, role):
@@ -169,7 +169,7 @@ class NeuroClientDisp(NeuroClient):
         self.clients[cl][0] = value
 
     def setHeader(self, cl, value):
-        self.clients[cl][1] = value
+        self.clients[cl][1] = Header(value)
 
     def setWatching(self, cl, value):
         self.clients[cl][2] = value
@@ -224,7 +224,7 @@ class NeuroClientDisp(NeuroClient):
                     if nSampl == None:
                         nSampl = len(samples[i])
                     else:
-                        if nSampl == len(samples[i]):
+                        if nSampl != len(samples[i]):
                             raise NeuroError("Packet length is not consistent.")
                     data[i].extend(samples[i])
         
